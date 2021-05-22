@@ -16,10 +16,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -42,6 +39,8 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
     private long endTime = 0;
     private long ticks = 0;
     private int graceLengthTicks = 1 * 60 * 20;
+
+    private Map<UUID, ItemStack[]> loggedOut = new HashMap<>();
 
     @Override
     public void tick() {
@@ -147,6 +146,8 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
 
         world.setGameRule(GameRule.DO_INSOMNIA, false);
         world.getWorldBorder().setSize(1000);
+
+        netherWorld.getWorldBorder().setSize(1000);
 
         this.getPlayers().forEach(this::spawnPlayer);
 
@@ -266,10 +267,12 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
             }
             p.getInventory().addItem(i);
         });
+
         p.getInventory().setHelmet(new ItemStack(Material.IRON_HELMET));
         p.getInventory().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
         p.getInventory().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
         p.getInventory().setBoots(new ItemStack(Material.IRON_BOOTS));
+
         p.getInventory().addItem(new ItemStack(Material.COOKED_BEEF, 24));
     }
 
@@ -289,10 +292,6 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
             }
             p.getInventory().addItem(i);
         });
-        p.getInventory().setHelmet(new ItemStack(Material.IRON_HELMET));
-        p.getInventory().setChestplate(new ItemStack(Material.IRON_CHESTPLATE));
-        p.getInventory().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
-        p.getInventory().setBoots(new ItemStack(Material.IRON_BOOTS));
 
         p.getInventory().addItem(new ItemStack(Material.COMPASS));
         p.getInventory().addItem(new ItemStack(Material.COOKED_BEEF, 24));
@@ -340,7 +339,7 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
                 new TextComponent(TextComponent.fromLegacyText(builder.toString()))));
 
 
-        if (ticks % 5 == 0) {
+        if (ticks % 2 == 0) {
             List<Player> players = getPlayers().stream().filter(p -> !getPlayerData(p.getUniqueId()).isRunner()).collect(Collectors.toList());
             for (Player player1 : players) {
                 for (Player player2 : players) {
@@ -352,7 +351,17 @@ public class GameRunner extends SMPGame<PlayerDataRunner> {
 
     @EventSubscription
     private void onLeave(PlayerQuitEvent event) {
+        loggedOut.put(event.getPlayer().getUniqueId(), event.getPlayer().getInventory().getContents());
         removePlayer(event.getPlayer());
+    }
+
+    @EventSubscription
+    private void onJoin(PlayerJoinEvent event) {
+        if(loggedOut.containsKey(event.getPlayer().getUniqueId())) {
+            ItemStack[] contents = loggedOut.remove(event.getPlayer().getUniqueId());
+            addPlayer(event.getPlayer());
+            event.getPlayer().getInventory().setContents(contents);
+        }
     }
 
     @EventSubscription

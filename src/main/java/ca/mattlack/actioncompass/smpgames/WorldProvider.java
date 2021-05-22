@@ -138,7 +138,7 @@ public class WorldProvider {
         return worlddata;
     }
 
-    private static void sync(Runnable runnable, Plugin plugin) {
+    public static void sync(Runnable runnable, Plugin plugin) {
         if(Bukkit.isPrimaryThread()) {
             runnable.run();
             return;

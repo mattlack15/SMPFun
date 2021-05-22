@@ -242,6 +242,10 @@ public class EventSubscriptions implements Listener {
 //                                !msg.getClass().toString().contains("PacketPlayOutChat") &&
 //                        !msg.getClass().toString().contains("Chunk") && !msg.getClass().toString().contains("Light"))
 //                            System.out.println("Sent: " + msg.getClass().toString());
+//                        if(msg.getClass().getName().contains("Player") || msg.getClass().getName().contains("spawn") ||
+//                        msg.getClass().getName().contains("Spawn") && !msg.getClass().getName().contains("EntitySpawn") || msg.getClass().getName()
+//                        .contains("Destroy"))
+//                            System.out.println(msg.getClass().toString());
                     }
 
                     @Override
